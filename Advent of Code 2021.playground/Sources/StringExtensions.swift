@@ -8,4 +8,8 @@ public extension String {
 
         try self.init(contentsOf: url)
     }
+    
+    func match(other: String) -> Int {
+        Set(self).intersection(Set(other)).count
+    }
 }

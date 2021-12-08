@@ -78,19 +78,9 @@ import Foundation
  In the output values, how many times do digits 1, 4, 7, or 8 appear?
  */
 
-var rawInput = [SevenSegmentInput]()
-try String(contentsOf: "day_8_input").components(separatedBy: CharacterSet.newlines).forEach { str in
-    if !str.isEmpty {
-        rawInput.append(SevenSegmentInput(line: str))
-    }
-}
-
-let answer1 = rawInput.reduce(0) {(ans1, line) -> Int in
-    return ans1 + (line.values.count(where: {val in
-        return [2,3,4,7].contains(val.count)
-    }))
-}
-print (answer1)
+var rawInput = try String(contentsOf: "day_8_input").components(separatedBy: CharacterSet.newlines).filter{!$0.isEmpty}.map{SevenSegmentInput(line: $0)}
+let answer1 = rawInput.reduce(0){$0 + $1.values.count{[2,3,4,7].contains($0.count)}}
+print(answer1)
 
 /**
 ### Part Two
@@ -149,50 +139,30 @@ print (answer1)
 
  For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
  */
-public func match(a: String, b: String) -> Int {
-    Set(a).intersection(Set(b)).count
-}
-
 var answer2 = 0
-for i in 0..<rawInput.count {
+answer2 = rawInput.reduce(0) {
     // Get the known values
-    let signals = rawInput[i].patterns
-    let digits1 = signals.filter{ $0.count == 2}[0]
-    let digits4 = signals.filter{ $0.count == 4}[0]
+    let digits1 = $1.patterns.filter{$0.count == 2}[0]
+    let digits4 = $1.patterns.filter{$0.count == 4}[0]
     
-    let values = rawInput[i].values
-    var str = ""
-    for value in values {
-        if value.count == 2 {
-            str += "1"
-        } else if value.count == 3 {
-            str += "7"
-        } else if value.count == 4 {
-            str += "4"
-        } else if value.count == 7 {
-            str += "8"
-        } else if value.count == 5 {
-            if match(a: value, b: digits4) == 2 {
-                str += "2"
-            } else if match(a: value, b: digits1) == 1 {
-                str += "5"
-            } else {
-                str += "3"
-            }
-        } else {
-            if match(a: value, b: digits4) == 4 {
-                str += "9"
-            } else if match(a: value, b: digits1) == 1 {
-                str += "6"
-            } else {
-                str += "0"
-            }
+    return $0 + Int($1.values.reduce(""){
+        var res = $0
+        switch ($1.count, $1.match(other: digits4), $1.match(other: digits1)) {
+        case (2,_,_): res += "1"
+        case (3,_,_): res += "7"
+        case (4,_,_): res += "4"
+        case (7,_,_): res += "8"
+        case (5,2,_): res += "2"
+        case (5,3,1): res += "5"
+        case (5,3,2): res += "3"
+        case (6,4,_): res += "9"
+        case (6,3,1): res += "6"
+        case (6,3,2): res += "0"
+        default: $0
         }
-    }
-    
-    answer2 += Int(str)!
+        return res
+    })!
 }
-
-print(answer2)
+print (answer2)
 
 //: [Next](@next)
